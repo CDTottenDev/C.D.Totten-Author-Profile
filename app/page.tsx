@@ -20,32 +20,36 @@ export default function Home() {
   const [currentSection, setCurrentSection] = useState<'home' | 'author' | 'books' | 'newsletter'>('home');
   
   useEffect(() => {
+    // Handle scroll for parallax effects
     const handleScroll = () => {
       setScrollY(window.scrollY);
-      
-      // Determine which section is in view for SARGE narration
-      const scrollPosition = window.scrollY + window.innerHeight / 2;
-      
-      const sectionsOffsets = {
-        home: 0,
-        author: document.querySelector('section:nth-of-type(2)')?.offsetTop || 0,
-        books: document.querySelector('#books')?.offsetTop || 0,
-        newsletter: document.querySelector('section:nth-of-type(4)')?.offsetTop || 0
-      };
-      
-      if (scrollPosition >= sectionsOffsets.newsletter) {
-        setCurrentSection('newsletter');
-      } else if (scrollPosition >= sectionsOffsets.books) {
-        setCurrentSection('books');
-      } else if (scrollPosition >= sectionsOffsets.author) {
-        setCurrentSection('author');
-      } else {
-        setCurrentSection('home');
-      }
     };
     
+    // Set up Intersection Observer for section detection
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.getAttribute('data-section') || 'home';
+            setCurrentSection(sectionId as 'home' | 'author' | 'books' | 'newsletter');
+          }
+        });
+      },
+      {
+        threshold: 0.5, // Trigger when 50% of the section is visible
+        rootMargin: '0px 0px -50% 0px' // Adjust viewport area to consider
+      }
+    );
+
+    // Observe all sections
+    const sections = document.querySelectorAll('[data-section]');
+    sections.forEach(section => observer.observe(section));
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
   }, []);
   
   return (
@@ -64,7 +68,7 @@ export default function Home() {
       
       <main>
         {/* Hero Section */}
-        <section className="relative h-screen flex items-center justify-center">
+        <section data-section="home" className="relative h-screen flex items-center justify-center">
           <div 
             className="absolute inset-0 z-0 opacity-40"
             style={{
@@ -115,7 +119,7 @@ export default function Home() {
         </section>
         
         {/* Author Introduction */}
-        <section className="py-20 relative overflow-hidden">
+        <section data-section="author" className="py-20 relative overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-10">
               <div className="md:w-1/3">
@@ -168,7 +172,7 @@ export default function Home() {
         </section>
         
         {/* Featured Book */}
-        <section id="books" className="py-20 relative">
+        <section data-section="books" id="books" className="py-20 relative">
           <div 
             className="absolute inset-0 z-0 opacity-20"
             style={{
@@ -212,7 +216,7 @@ export default function Home() {
         </section>
         
         {/* Newsletter Section */}
-        <section className="py-20 relative">
+        <section data-section="newsletter" className="py-20 relative">
           <div 
             className="absolute inset-0 z-0"
             style={{
