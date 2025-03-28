@@ -37,7 +37,3 @@ next-env.d.ts
 
 # naming conventions
 naming-conventions.txt
-
-# public images
-public/images/
-/public
